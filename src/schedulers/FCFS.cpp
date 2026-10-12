@@ -1,31 +1,45 @@
-#include <bits/stdc++.h>
+// FCFS scheduler. The algorithm is unchanged from the original single-file version;
+// it now lives in its own namespace and is driven by src/main.cpp.
+#include "../Schedulers.h"
+#include <algorithm>
+#include <climits>
+#include <iostream>
+#include <vector>
 using namespace std;
+
+namespace fcfs {
+
 //structure for every process
 struct Process {
    int pid; // Process ID
    int art; // Arrival Time
    int bt; // Burst Time
 };
+
+
 void findTurnAroundTime(Process proc[], int n, int wt[], int tat[]) {
    for (int i = 0; i < n; i++)
    tat[i] = proc[i].bt + wt[i];
 }
+
 //waiting time of all process
 void findWaitingTime(Process proc[], int n, int wt[], int RT[], int FT[], int GantChart[], int t[], int UT[], int CT[]) {
+
+   
    int rt[n];
    int firstpt[n];int min_pid;
    for(int i=0;i<n;i++){firstpt[i]=-1;}
    for (int i = 0; i < n; i++)
    rt[i] = proc[i].bt;
-   int complete = 0, minm = INT_MAX;//int t=0;
+   int complete = 0, min=INT_MAX;
    int shortest = 0, finish_time;
    bool check = false;
    while (complete != n) {
       for (int j = 0; j < n; j++) {
-         if ((proc[j].art <= t[0]) && (rt[j] <= minm) && rt[j] > 0) {
-            //the following condition is to prioritize processes with similar burst time but with an earlier pid            
-            if(rt[j]==minm && proc[j].pid<min_pid){min_pid = proc[j].pid;shortest = j;check=true;}
-            else if(rt[j]<minm){minm = rt[j];min_pid = proc[j].pid;
+         if ((proc[j].art <= t[0]) && rt[j] > 0 && proc[j].art <= min) {
+         //the following condition is to prioritize processes with an earlier arrival time but with smaller pid            
+            if(proc[j].art==min && proc[j].pid<min_pid){min_pid = proc[j].pid;shortest = j;check=true;}
+            else if(proc[j].art<min){min = proc[j].art;min_pid = proc[j].pid;
             shortest = j;
             check = true;}
          }
@@ -35,22 +49,19 @@ void findWaitingTime(Process proc[], int n, int wt[], int RT[], int FT[], int Ga
          t[0]++;
          continue;
       }
-      
-        // decrementing the remaining time
-      rt[shortest]--;
-      minm = rt[shortest];
-      if (minm == 0)
-         minm = INT_MAX;
+      // decrementing the remaining time
+      int asdf=rt[shortest];rt[shortest]=0;
       if(firstpt[shortest]==-1){firstpt[shortest]=t[0];RT[shortest]=firstpt[shortest]-proc[shortest].art;if(RT[shortest]<0){RT[shortest]=0;}}
-      GantChart[t[0]]=proc[shortest].pid;t[0]++;
-      FT[0]=t[0];
+      for(int i=0;i<asdf;i++){
+            GantChart[t[0]]=proc[shortest].pid;t[0]++;
+        }FT[0]=t[0];
          // If a process gets completely
          // executed
          if (rt[shortest] == 0) {
+            min = INT_MAX;
             complete++;
             check = false;
             finish_time = t[0];
-            if(RT[shortest]<0){RT[shortest]=0;}
             CT[shortest]=finish_time;
             // Calculate waiting time
             wt[shortest] = finish_time -
@@ -59,10 +70,11 @@ void findWaitingTime(Process proc[], int n, int wt[], int RT[], int FT[], int Ga
             if (wt[shortest] < 0)
                wt[shortest] = 0;
          }
-         
    }
 }
+
 // Function to calculate average time
+
 void findavgTime(Process proc[], int n) {
    int wt[n], tat[n], RT[n], total_wt = 0, UT[1],
    total_tat = 0, total_RT = 0, FT[1], t[1], CT[n];
@@ -87,10 +99,14 @@ void findavgTime(Process proc[], int n) {
    cout << "\nAverage Response Time = " << (float)total_RT / (float)n; cout << "\nThroughput = " << (float)n / (float)FT[0];
    cout << "\nUtilization = " << (float)(FT[0]-UT[0]) / (float)FT[0]<<"\n";
 }
-// main function
-int main() {
-   Process proc[] = { { 1, 0, 5 }, { 2, 1, 3 }, { 3, 2, 4 }, { 4, 4, 1 } };
-   int n = sizeof(proc) / sizeof(proc[0]);
-   findavgTime(proc, n);
-   return 0;
+
+
+void run(const std::vector<ProcessSpec>& input) {
+   std::vector<Process> proc;
+   for (const ProcessSpec& p : input)
+      proc.push_back({p.pid, p.arrival, p.burst});
+   int n = proc.size();
+   findavgTime(proc.data(), n);
 }
+
+} // namespace fcfs

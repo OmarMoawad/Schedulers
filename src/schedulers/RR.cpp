@@ -1,5 +1,13 @@
-#include <bits/stdc++.h>
+// RR scheduler. The algorithm is unchanged from the original single-file version;
+// it now lives in its own namespace and is driven by src/main.cpp.
+#include "../Schedulers.h"
+#include <algorithm>
+#include <climits>
+#include <iostream>
+#include <vector>
 using namespace std;
+
+namespace rr {
 
 //structure for every process
 struct Process {
@@ -135,10 +143,13 @@ void findavgTime(Process proc[], int n) {
    cout << "\nUtilization = " << (float)(FT[0]-UT[0]) / (float)FT[0]<<"\n";
 }
 
-// main function
-int main() {
-   Process proc[] = { { 1, 0, 5 }, { 2, 1, 4 }, { 3, 2, 2 }, { 4, 4, 1 } };
-   int n = sizeof(proc) / sizeof(proc[0]);
-   findavgTime(proc, n);
-   return 0;
+
+void run(const std::vector<ProcessSpec>& input) {
+   std::vector<Process> proc;
+   for (const ProcessSpec& p : input)
+      proc.push_back({p.pid, p.arrival, p.burst});
+   int n = proc.size();
+   findavgTime(proc.data(), n);
 }
+
+} // namespace rr
